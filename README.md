@@ -17,4 +17,5 @@ We train our model using the USCISI dataset, which consists of 100,000 images me
 Train RWTN-Net by running train.py
 #### Testing
 Place the test image in the root directory and name it as 'test.png'
+
 Run test.py, then you will get the result of RWTN-Net

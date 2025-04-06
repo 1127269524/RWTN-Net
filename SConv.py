@@ -118,20 +118,3 @@ class SConv_2d(nn.Module):
         x = self.conv(x)
         
         return x
-
-if __name__ == "__main__":
-    # Define the coefficient matrix for the convolution
-    kernel_size = 7
-    Coefficient = torch.rand((kernel_size ** 2, kernel_size ** 2))
-
-    # Create an instance of SConv_2d
-    sconv = SConv_2d(in_channels=3, out_channels=128, kernel_size=kernel_size,stride=2,padding=3)
-
-    # Create a random input tensor with shape [16, 3, 320, 320]
-    input_tensor = torch.randn(16, 3, 320, 320)
-
-    # Perform the forward pass
-    output = sconv(input_tensor, Coefficient)
-
-    # Print the output shape
-    print("Output shape:", output.shape)

@@ -97,9 +97,9 @@ def test_Pre_Rec_f1score(model,test_loader,device):
 
             # 计算F1 Score
 
-            sig_logits0 = torch.sigmoid(logits0) # 由于sigmoid外置到了损失函数中，所以实际预测时需要单独添加sigmoid
+            sig_logits0 = torch.sigmoid(logits0)
 
-            for i in range(logits0.shape[0]): # 遍历batch内的每一张图，这样计算的结果才是准确的，不能一个batch一起算
+            for i in range(logits0.shape[0]):
                 P, R, F = my_func.get_Precision_Recall_F1(sig_logits0[i][0], y[i][0])
                 Pre.append(P)
                 Rec.append(R)
@@ -127,9 +127,6 @@ def get_sensitivity(SR, GT, threshold=0.5):
     GT = GT > threshold
 
 
-    # GT = GT == torch.max(GT)
-
-
     # TP : True Positive
     # FN : False Negative
 
@@ -151,8 +148,6 @@ def get_precision(SR, GT, threshold=0.5):
     GT = GT > threshold
 
 
-    # GT = GT == torch.max(GT)
-
     # TP : True Positive
     # FP : False Positive
     TP = ((SR == 1).float() + (GT == 1).float()) == 2
@@ -173,7 +168,6 @@ def get_F1(SR, GT, threshold=0.5):
     SE = get_sensitivity(SR, GT, threshold=threshold)
     PC = get_precision(SR, GT, threshold=threshold)
 
-    # F1 = 2 * SE * PC / (SE + PC + 1e-6)
     F1 = 2 * SE * PC / (SE + PC)
 
     return F1
@@ -184,7 +178,6 @@ def get_Precision_Recall_F1(SR, GT, threshold=0.5):
     SE = get_sensitivity(SR, GT, threshold=threshold)
     PC = get_precision(SR, GT, threshold=threshold)
 
-    # F1 = 2 * SE * PC / (SE + PC + 1e-6)
     if (SE+PC)==0:
         F1=0
     else:

@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 def get_topk(x, k=10, dim=-3):
-    # b, c, h, w = x.shape
     val, _ = torch.topk(x, k=k, dim=dim)
     return val
 

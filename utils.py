@@ -1,10 +1,5 @@
-#!/usr/bin/env python
-# coding: utf-8
+
 import math
-
-# In[2]:
-
-
 import numpy as np
 import torch
 

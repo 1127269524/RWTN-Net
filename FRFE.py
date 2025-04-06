@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-# fasternet.py
-# author: lm
-
-"""
-https://arxiv.org/abs/2303.03667
-<<Run, Don't Walk: Chasing Higher FLOPS for Faster Neural Networks>>
-"""
 
 from collections import OrderedDict
 from functools import partial

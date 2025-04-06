@@ -63,9 +63,9 @@ def test_loss_and_f1score_(model,test_loader,bs,device,loss_func):
 
             # 计算F1 Score
 
-            sig_logits0 = torch.sigmoid(logits0) # 由于sigmoid外置到了损失函数中，所以实际预测时需要单独添加sigmoid
+            sig_logits0 = torch.sigmoid(logits0)
 
-            for i in range(logits0.shape[0]): # 遍历batch内的每一张图，这样计算的结果才是准确的，不能一个batch一起算
+            for i in range(logits0.shape[0]):
                 F1_Score.append(my_func.get_F1(sig_logits0[i][0], y[i][0]))
 
 

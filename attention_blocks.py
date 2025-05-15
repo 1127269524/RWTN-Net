@@ -87,10 +87,3 @@ class CBAM(nn.Module):
         out = x * self.ca(x)  # 使用通道注意力加权输入特征图
         result = out * self.sa(out)  # 使用空间注意力进一步加权特征图
         return result  # 返回最终的特征图
-
-# 示例使用
-# if __name__ == '__main__':
-#     block = CBAM(64)  # 创建一个CBAM模块，输入通道为64
-#     input = torch.rand(1, 64, 64, 64)  # 随机生成一个输入特征图
-#     output = block(input)  # 通过CBAM模块处理输入特征图
-#     print(input.size(), output.size())  # 打印输入和输出的

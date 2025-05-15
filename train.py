@@ -22,8 +22,6 @@ import tqdm
 import time
 from RWTN_Net import RWTN_Net
 from test_in_dataset import VGG19_LOSS_2 as VGG19_LOSS,test_loss_and_f1score_
-# torch.autograd.set_detect_anomaly(True)
-from pytorch_lightning import Trainer, seed_everything
 import os
 
 
@@ -115,18 +113,14 @@ def test_Pre_Rec_f1score(model, test_loader, device):
 
 if __name__ == '__main__':
 
-
-
-
-    # 参数设置
     img_size = 320 # 数据集图像大小
     bs = 16        # batch size 16
     lr_ = 0.01     # 学习率  0.01
-    epochs = 100    # epoch数`
+    epochs = 100    # epoch数
     n = 20         # 测试频率
-    begin_epoch = 0 # 多少个epoch开始多轮测试，否则一轮只测试一次
-    optima = '普通交叉熵与SGD'    # 记录损失函数和优化器选用信息，不影响参数设置，仅记录
-    half_tensor = True   # 是否开启半精度训练,我改的False
+    begin_epoch = 0
+    optima = '普通交叉熵与SGD'
+    half_tensor = True
 
 
     # 获取当前文件的绝对路径
@@ -140,21 +134,20 @@ if __name__ == '__main__':
     dataset_path ='D:/study/copymove_img'
 
     # USC-ISI训练集加载 ============================================================================================================
-    train_db = MyDataset(os.path.join(dataset_path,'uscisi'), 'train', img_size)  # 训练集,resize分辨率320
-    train_loader = torch.utils.data.DataLoader(train_db, batch_size=bs, shuffle=True,num_workers=4)  # num_workers容易报错，需要在if __name__ == '__main__':里调用
+    train_db = MyDataset(os.path.join(dataset_path,'uscisi'), 'train', img_size)
+    train_loader = torch.utils.data.DataLoader(train_db, batch_size=bs, shuffle=True,num_workers=4)
 
     test_loader=None
     # Coverage数据集
-    coverage_db = MyDataset(os.path.join(dataset_path,'COVERAGE'), 'test', img_size)  # 图片数固定100
-    coverage_loader  = torch.utils.data.DataLoader(coverage_db , batch_size=bs, shuffle=False,num_workers=4)  # num_workers=4
+    coverage_db = MyDataset(os.path.join(dataset_path,'COVERAGE'), 'test', img_size)
+    coverage_loader  = torch.utils.data.DataLoader(coverage_db , batch_size=bs, shuffle=False,num_workers=4)
 
     # CoMoFoD数据集
-    CoMoFoD_db = MyDataset(os.path.join(dataset_path,'CoMoFoD_small_v2'), 'test', img_size)  # 图片数固定200
-    CoMoFoD_loader  = torch.utils.data.DataLoader(CoMoFoD_db , batch_size=bs, shuffle=False,num_workers=4)  # num_workers=4
+    CoMoFoD_db = MyDataset(os.path.join(dataset_path,'CoMoFoD_small_v2'), 'test', img_size)
+    CoMoFoD_loader  = torch.utils.data.DataLoader(CoMoFoD_db , batch_size=bs, shuffle=False,num_workers=4)
 
     # CASIA数据集
-    CASIA_db = MyDataset(os.path.join(dataset_path,'CASIA'), 'test', img_size)  # 图片数固定100
-    #CASIA_db = MyDataset('D:/study/copymove_img/CASIA', 'test', img_size)  # 图片数固定100
+    CASIA_db = MyDataset(os.path.join(dataset_path,'CASIA'), 'test', img_size)
     CASIA_loader = torch.utils.data.DataLoader(CASIA_db, batch_size=bs, shuffle=False,num_workers=4)
 
 
@@ -164,13 +157,13 @@ if __name__ == '__main__':
     test_USC = False
 
     # 训练设置
-    device = torch.device('cuda:0')  #设备
+    device = torch.device('cuda:0')
     Coefficient_3 = Interpolation_Coefficient(3)
     Coefficient_3=Coefficient_3.to(device)
 
-    model = RWTN_Net(Coefficient_3=Coefficient_3).to(device)   # 把模型搬到设备里
+    model = RWTN_Net(Coefficient_3=Coefficient_3).to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr_, momentum=0.9, nesterov=True)  # 优化器
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr_, momentum=0.9, nesterov=True)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1,
                                                      patience=30, verbose=True, cooldown=0, min_lr=1e-6)
@@ -180,7 +173,7 @@ if __name__ == '__main__':
     # 加载预训练权重
     if load_pth:
         weight_path = os.path.join(weight_root, 'last.pth')
-        checkpoint = torch.load(weight_path)  # pth文件路径
+        checkpoint = torch.load(weight_path)
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         scaler.load_state_dict(checkpoint['scaler'])
@@ -309,15 +302,14 @@ if __name__ == '__main__':
                 flag = 0
 
                 # 如果模型达到新的最优状态，则保存权重文件pt文件
-                if f1  > best_f1:  # 如果当前状态优于最佳状态
-                    best_f1 = f1   # 更新最佳状态的数值
+                if f1  > best_f1:
+                    best_f1 = f1
                     # 保存模型权重pt文件
                     f1Root = os.path.join(weight_root, 'best_val.pth')
                     torch.save({'epoch': epoch,'best_f1':best_f1,'best_cov_f1':best_cov_f1,'best_comofod':best_comofod,'best_CoMoFoD':best_CoMoFoD,'best_CASIA':best_CASIA,
                                 'model': model.state_dict(),'optimizer': optimizer.state_dict(),'scaler': scaler.state_dict()}, f1Root)
                     print('f1达到新记录，已保存最佳状态; ')
                     flag += 1
-
 
                 if comofod_f1 > best_comofod:
                     best_comofod = comofod_f1
@@ -380,8 +372,8 @@ if __name__ == '__main__':
                         str_ = '\n'
                         f.write(str_)
 
-                # 是否是本epoch的最后一个step
-                if (step+1) == int(train_total):  # 只保留一个epoch的最后step的权重，因为只有这个是遍历完整个数据集的
+
+                if (step+1) == int(train_total):
                     # 直接保存最后一个epoch的权重
                     lastRoot = os.path.join(weight_root, 'last.pth')
                     torch.save(
@@ -395,13 +387,3 @@ if __name__ == '__main__':
             scheduler.step(best_nine)
             current_lr = optimizer.param_groups[0]['lr']
             print(f'Epoch: {epoch+1}, best_nine: {best_nine:.4f}, Learning Rate: {current_lr:.6f},best:{scheduler.best:.4f},num_bad_epochs:{scheduler.num_bad_epochs}')
-
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,9 @@
 
+"""
+https://arxiv.org/abs/2303.03667
+<<Run, Don't Walk: Chasing Higher FLOPS for Faster Neural Networks>>
+"""
+
 from collections import OrderedDict
 from functools import partial
 from typing import List
@@ -144,9 +149,9 @@ class PAConvBlock(nn.Module):
         super(PAConvBlock, self).__init__()
         inner_channels = inner_channels or in_channels * 2
         self.conv1 = PAConv2d(in_channels,
-                             kernel_size,
-                             n_div,
-                             forward)
+                              kernel_size,
+                              n_div,
+                              forward)
         self.conv2 = ConvBNLayer(in_channels,
                                  inner_channels,
                                  bias=bias,
@@ -167,7 +172,7 @@ class PAConvBlock(nn.Module):
 
 
 
-class FasterNet_0(nn.Module):
+class Extractor(nn.Module):
     def __init__(self,
                  in_channels=3,
                  out_channels=1000,
@@ -182,7 +187,7 @@ class FasterNet_0(nn.Module):
                  wt_levels=(5, 4, 3, 2),
                  Coefficient_3=None
                  ):
-        super(FasterNet_0, self).__init__()
+        super(Extractor, self).__init__()
 
         self.Coefficient_3=Coefficient_3
 
@@ -195,52 +200,52 @@ class FasterNet_0(nn.Module):
         self.WTConv3 = WTConv2d(inner_channels[2], inner_channels[2], kernel_size=5, wt_levels=wt_levels[3])
 
         self.embedding = SCConvBNLayer(in_channels,
-                                     inner_channels[0],Coefficient_3=self.Coefficient_3)    # 原0，记得改
+                                       inner_channels[0],Coefficient_3=self.Coefficient_3)
 
         self.stage1 = nn.Sequential(OrderedDict([
             ('block{}'.format(idx),
              PAConvBlock(inner_channels[0],
-                            bias=bias,
-                            act=act,
-                            n_div=n_div,
-                            forward=forward,
-                            drop_path=drop_path)) for idx in range(blocks[0])]))
+                         bias=bias,
+                         act=act,
+                         n_div=n_div,
+                         forward=forward,
+                         drop_path=drop_path)) for idx in range(blocks[0])]))
 
         self.merging1 = SCConvBNLayer(inner_channels[0],
-                                    inner_channels[1],Coefficient_3=self.Coefficient_3)
+                                      inner_channels[1],Coefficient_3=self.Coefficient_3)
 
         self.stage2 = nn.Sequential(OrderedDict([
             ('block{}'.format(idx),
              PAConvBlock(inner_channels[1],
-                            bias=bias,
-                            act=act,
-                            n_div=n_div,
-                            forward=forward,
-                            drop_path=drop_path)) for idx in range(blocks[1])]))
+                         bias=bias,
+                         act=act,
+                         n_div=n_div,
+                         forward=forward,
+                         drop_path=drop_path)) for idx in range(blocks[1])]))
 
         self.merging2 = SCConvBNLayer(inner_channels[1],
-                                    inner_channels[2],Coefficient_3=self.Coefficient_3)
+                                      inner_channels[2],Coefficient_3=self.Coefficient_3)
 
         self.stage3 = nn.Sequential(OrderedDict([
             ('block{}'.format(idx),
              PAConvBlock(inner_channels[2],
-                            bias=bias,
-                            act=act,
-                            n_div=n_div,
-                            forward=forward,
-                            drop_path=drop_path)) for idx in range(blocks[2])]))
+                         bias=bias,
+                         act=act,
+                         n_div=n_div,
+                         forward=forward,
+                         drop_path=drop_path)) for idx in range(blocks[2])]))
 
         self.merging3 = SCConvBNLayer(inner_channels[2],
-                                    inner_channels[3],Coefficient_3=self.Coefficient_3)
+                                      inner_channels[3],Coefficient_3=self.Coefficient_3)
 
         self.stage4 = nn.Sequential(OrderedDict([
             ('block{}'.format(idx),
              PAConvBlock(inner_channels[3],
-                            bias=bias,
-                            act=act,
-                            n_div=n_div,
-                            forward=forward,
-                            drop_path=drop_path)) for idx in range(blocks[3])]))
+                         bias=bias,
+                         act=act,
+                         n_div=n_div,
+                         forward=forward,
+                         drop_path=drop_path)) for idx in range(blocks[3])]))
 
         self.classifier = nn.Sequential(OrderedDict([
             ('global_average_pooling', nn.AdaptiveAvgPool2d(1)),
@@ -251,55 +256,39 @@ class FasterNet_0(nn.Module):
         ]))
         self.feature_channels = inner_channels
 
-        # self.MEEM0=MEEM(in_dim=3, hidden_dim=1, width=2)
-        # self.MEEM1=MEEM(in_dim=40, hidden_dim=20, width=3)
-        # self.MEEM2=MEEM(in_dim=80, hidden_dim=40, width=3)
-        # self.MEEM3=MEEM(in_dim=160, hidden_dim=80, width=3)
-        # self.MEEM4=MEEM(in_dim=160, hidden_dim=80, width=3)
+
 
     def fuse_bn_tensor(self):
         for m in self.modules():
             if isinstance(m, ConvBNLayer):
                 m._fuse_bn_tensor()
 
-    def forward_feature(self, x: Tensor) -> List[Tensor]:
-        # print("x变换前",x.shape)16,3,320,320
-        x=self.WTConv0(x)#16,3,320,320
-        # print("x变换后", x.shape)16,3,320,320
+    def forward(self, x: Tensor) -> List[Tensor]:
+
+        x=self.WTConv0(x)
+
 
         x1 = self.stage1(self.embedding(x))
 
-        # print("x1变换前", x1.shape)4,40,160,160
-        x1 = self.WTConv1(x1)#4,40,160,160
-        # print("x1变换后", x1.shape)4,40,160,160
 
-        x2 = self.stage2(self.merging1(x1))#4,80,80,80
+        x1 = self.WTConv1(x1)
 
-        # print("x2变换前", x2.shape)
-        x2 = self.WTConv2(x2)#4,80,80,80
-        # print("x2变换后", x2.shape)
 
-        x3 = self.stage3(self.merging2(x2))#4,160,40,40
-
-        # print("x3变换前", x3.shape)
-        x3 = self.WTConv3(x3)
-        # print("x3变换后", x3.shape)
-        x4 = self.stage4(self.merging3(x3))#4,160,20,20
-        return x1, x2, x3, x4
-
-    def forward(self, x: Tensor) -> Tensor:
-        _, _, _, x = self.forward_feature(x)
-        x = self.classifier(x)
-        # print("经过classifier",x.shape)
-
-        return x
-
-    def forward_feature_nohead(self, x: Tensor) -> List[Tensor]:
-        x1 = self.stage1(x)
         x2 = self.stage2(self.merging1(x1))
+
+
+        x2 = self.WTConv2(x2)
+
+
         x3 = self.stage3(self.merging2(x2))
+
+
+        x3 = self.WTConv3(x3)
+
         x4 = self.stage4(self.merging3(x3))
         return x1, x2, x3, x4
 
 
-FRFE = partial(FasterNet_0, inner_channels=[40, 80, 160, 160], blocks=[2, 2, 3, 3], act='GELU', drop_path=0.)
+
+
+FRFE = partial(Extractor, inner_channels=[40, 80, 160, 160], blocks=[2, 2, 3, 3], act='GELU', drop_path=0.)

@@ -4,15 +4,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-from tqdm import trange
-from torchvision import transforms
-from PIL import Image
 from sklearn.metrics import precision_recall_fscore_support, roc_auc_score
-import my_func
-
-
-
-
 
 
 criteon = nn.BCEWithLogitsLoss()  # sigmoid + 交叉熵
@@ -29,7 +21,7 @@ def fs_(pred, gt):
 
 
 def VGG19_LOSS_2(outputs,label):
-   # label = torch.mean(label,dim=1).unsqueeze(1)
+
    loss0 = criteon(outputs[0], label)
    loss1 = criteon(outputs[1], label)
 
@@ -40,17 +32,16 @@ def VGG19_LOSS_2(outputs,label):
 
 def test_loss_and_f1score_(model,test_loader,bs,device,loss_func):
     F1_Score = []
-    total_loss = 0  #
-    total = len(test_loader.dataset) / bs  # 总的数量
+    total_loss = 0
+    total = len(test_loader.dataset) / bs
 
     with torch.no_grad():
-        for step, (x, y) in enumerate(test_loader):  # 循环取测试数据batch
-            x, y = x.to(device), y.to(device)  # 防止爆显存，每次只把一个batch的数据放进显存
-            with torch.cuda.amp.autocast():  # 半精度测试
+        for step, (x, y) in enumerate(test_loader):
+            x, y = x.to(device), y.to(device)
+            with torch.cuda.amp.autocast():
                 logits = model(x)
                 y = torch.mean(y, dim=1).unsqueeze(1)
                 loss = loss_func(logits, y)  # 交叉熵误差
-                # loss = SERT_LOSS(logits, y)
                 #防止损失值出现nan
             if loss.item() == loss.item():
                 total_loss += loss.item() / total
@@ -65,7 +56,7 @@ def test_loss_and_f1score_(model,test_loader,bs,device,loss_func):
             sig_logits0 = torch.sigmoid(logits0)
 
             for i in range(logits0.shape[0]):
-                F1_Score.append(my_func.get_F1(sig_logits0[i][0], y[i][0]))
+                F1_Score.append(get_F1(sig_logits0[i][0], y[i][0]))
 
 
         f1_len = len(F1_Score)
@@ -86,9 +77,9 @@ def test_Pre_Rec_f1score(model,test_loader,device):
     F1_Score = []
 
     with torch.no_grad():
-        for step, (x, y) in enumerate(test_loader):  # 循环取测试数据batch
-            x, y = x.to(device), y.to(device)  # 防止爆显存，每次只把一个batch的数据放进显存
-            with torch.cuda.amp.autocast():  # 半精度测试
+        for step, (x, y) in enumerate(test_loader):
+            x, y = x.to(device), y.to(device)
+            with torch.cuda.amp.autocast():
                 logits = model(x)
                 y = torch.mean(y, dim=1).unsqueeze(1)
 
@@ -99,7 +90,7 @@ def test_Pre_Rec_f1score(model,test_loader,device):
             sig_logits0 = torch.sigmoid(logits0)
 
             for i in range(logits0.shape[0]):
-                P, R, F = my_func.get_Precision_Recall_F1(sig_logits0[i][0], y[i][0])
+                P, R, F = get_Precision_Recall_F1(sig_logits0[i][0], y[i][0])
                 Pre.append(P)
                 Rec.append(R)
                 F1_Score.append(F)
@@ -120,19 +111,18 @@ def test_Pre_Rec_f1score(model,test_loader,device):
 
 # Recall
 def get_sensitivity(SR, GT, threshold=0.5):
-    # Sensitivity == Recall
+
 
     SR = SR > threshold
     GT = GT > threshold
 
 
-    # TP : True Positive
-    # FN : False Negative
+
 
     TP = ((SR == 1).float() + (GT == 1).float()) == 2
     FN = ((SR == 0).float() + (GT == 1).float()) == 2
 
-    # SE = float(torch.sum(TP)) / (float(torch.sum(TP + FN)) + 1e-6)
+
 
     if (float(torch.sum(TP + FN)))==0:
         SE=0
@@ -147,12 +137,11 @@ def get_precision(SR, GT, threshold=0.5):
     GT = GT > threshold
 
 
-    # TP : True Positive
-    # FP : False Positive
+
     TP = ((SR == 1).float() + (GT == 1).float()) == 2
     FP = ((SR == 1).float() + (GT == 0).float()) == 2
 
-    # PC = float(torch.sum(TP)) / (float(torch.sum(TP + FP)) + 1e-6)
+
     if (float(torch.sum(TP + FP)))==0:
         PC=0
     else:
@@ -163,7 +152,7 @@ def get_precision(SR, GT, threshold=0.5):
 
 
 def get_F1(SR, GT, threshold=0.5):
-    # Sensitivity == Recall
+
     SE = get_sensitivity(SR, GT, threshold=threshold)
     PC = get_precision(SR, GT, threshold=threshold)
 
@@ -173,7 +162,7 @@ def get_F1(SR, GT, threshold=0.5):
 
 
 def get_Precision_Recall_F1(SR, GT, threshold=0.5):
-    # Sensitivity == Recall
+
     SE = get_sensitivity(SR, GT, threshold=threshold)
     PC = get_precision(SR, GT, threshold=threshold)
 

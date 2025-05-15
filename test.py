@@ -1,19 +1,18 @@
-import time
 import torch
 from RWTN_Net import RWTN_Net
 from utils import Interpolation_Coefficient
 from PIL import Image
 from torchvision import transforms
 from matplotlib import pyplot as plt
-weight_root = './weights'  # your weight root
+weight_root = './weights'
 device = torch.device('cuda:0')  # device 'cuda' or 'cpu'
 Coefficient_3 = Interpolation_Coefficient(3)
 Coefficient_3=Coefficient_3.to(device)
 model = RWTN_Net(Coefficient_3=Coefficient_3).to(device)
 
-weight_path = weight_root + r'\best.pth'   # weight
-checkpoint = torch.load(weight_path)  # dict, include:'model','optimizer','scaler'
-model.load_state_dict(checkpoint['model'])  # load model
+weight_path = weight_root + r'\best.pth'
+checkpoint = torch.load(weight_path)
+model.load_state_dict(checkpoint['model'])
 model.eval()
 
 resize=320
@@ -36,16 +35,3 @@ with torch.no_grad():
     filepath = "./test_result.png"
 
     plt.imsave(filepath, result, cmap='gray')
-
-
-
-
-
-
-
-
-
-
-
-
-
